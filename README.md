@@ -10,8 +10,8 @@ The first implementation follows `prompts/master.md`'s Phase 1 foundation and `p
 
 ## Local setup
 
-1. Install Node.js 20.9 or newer and PostgreSQL 16+.
-2. Copy `.env.example` to `.env` and set `DATABASE_URL` plus a random `AUTH_SECRET` of at least 32 characters.
+1. Install Node.js 20.12 or newer and PostgreSQL 16+.
+2. Set `DATABASE_URL` and `AUTH_SECRET` (at least 32 random characters) in `.env`, `.env.local`, or `.env.development.local`. Prisma loads the local env files through `prisma.config.ts`; Next.js loads them directly.
 3. Run `npm install`.
 4. Run `npm run db:generate` and `npm run db:migrate` to create the foundation tables.
 5. Run `npx prisma db seed` to add the built-in roles and permissions.

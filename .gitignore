@@ -6,3 +6,6 @@ coverage/
 !.env.example
 *.log
 prisma/*.db
+
+.vercel
+*.tsbuildinfo

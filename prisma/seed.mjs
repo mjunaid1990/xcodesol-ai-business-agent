@@ -1,4 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import prismaPackage from "@prisma/client";
+
+const { PrismaClient } = prismaPackage;
 
 const prisma = new PrismaClient();
 
@@ -25,13 +27,18 @@ const byRole = {
 try {
   const records = await Promise.all(permissions.map(([name, slug]) => prisma.permission.upsert({ where: { slug }, update: { name }, create: { name, slug } })));
   const permissionBySlug = new Map(records.map((record) => [record.slug, record.id]));
+  const roleByName = new Map();
   for (const name of roleNames) {
     let role = await prisma.role.findFirst({ where: { workspaceId: null, slug: name.toLowerCase() } });
     if (!role) role = await prisma.role.create({ data: { name, slug: name.toLowerCase(), description: `${name} workspace role`, isSystem: true } });
-    for (const slug of byRole[name]) {
-      const permissionId = permissionBySlug.get(slug);
-      if (permissionId) await prisma.rolePermission.upsert({ where: { roleId_permissionId: { roleId: role.id, permissionId } }, update: {}, create: { roleId: role.id, permissionId } });
-    }
+    roleByName.set(name, role);
+  }
+  for (const name of roleNames) {
+    const role = roleByName.get(name);
+    const data = byRole[name]
+      .map((slug) => ({ roleId: role.id, permissionId: permissionBySlug.get(slug) }))
+      .filter((assignment) => assignment.permissionId);
+    await prisma.rolePermission.createMany({ data, skipDuplicates: true });
   }
   console.log(`Seeded ${permissions.length} permissions and ${roleNames.length} roles.`);
 } finally {
