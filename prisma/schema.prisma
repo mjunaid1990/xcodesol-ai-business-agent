@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String?
+  avatarUrl       String?
+  timezone        String         @default("UTC")
+  locale          String         @default("en")
+  lastLoginAt     DateTime?
+  workspaceUsers  WorkspaceUser[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([email])
+  @@map("users")
+}
+
+model Workspace {
+  id                    String         @id @default(uuid())
+  name                  String
+  slug                  String         @unique
+  logoUrl               String?
+  websiteUrl            String?
+  industry              String?
+  companySize           String?
+  timezone              String         @default("UTC")
+  currency              String         @default("USD")
+  status                String         @default("active")
+  onboardingCompletedAt DateTime?
+  users                 WorkspaceUser[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@map("workspaces")
+}
+
+model WorkspaceUser {
+  id           String    @id @default(uuid())
+  workspaceId  String
+  userId       String
+  role         String    @default("member")
+  status       String    @default("active")
+  joinedAt     DateTime?
+  lastActiveAt DateTime?
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+  @@map("workspace_users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  workspaceId String?
+  name        String
+  slug        String
+  description String?
+  isSystem    Boolean  @default(false)
+  permissions RolePermission[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        String
+  slug        String           @unique
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
