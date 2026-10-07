@@ -5,23 +5,29 @@ import { usePathname } from "next/navigation";
 import { Activity, BarChart3, BookOpen, Bot, CheckSquare, ChevronDown, CreditCard, LayoutDashboard, Layers3, LogOut, MessageSquare, Plug, Settings, Users, UsersRound, Workflow } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { logoutAction, switchWorkspaceAction } from "@/app/auth-actions";
+import { dashboardSections } from "@/components/dashboard/navigation-data";
 
-export const navItems: { label: string; href: string; icon: LucideIcon; group: "workspace" | "management" }[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "workspace" },
-  { label: "AI Agents", href: "/ai-agents", icon: Bot, group: "workspace" },
-  { label: "Automations", href: "/automations", icon: Workflow, group: "workspace" },
-  { label: "Tasks", href: "/tasks", icon: CheckSquare, group: "workspace" },
-  { label: "Knowledge", href: "/knowledge", icon: BookOpen, group: "workspace" },
-  { label: "Customers", href: "/customers", icon: Users, group: "workspace" },
-  { label: "Conversations", href: "/conversations", icon: MessageSquare, group: "workspace" },
-  { label: "Integrations", href: "/integrations", icon: Plug, group: "workspace" },
-  { label: "Analytics", href: "/analytics", icon: BarChart3, group: "workspace" },
-  { label: "Activity / Logs", href: "/activity", icon: Activity, group: "workspace" },
-  { label: "Templates", href: "/templates", icon: Layers3, group: "workspace" },
-  { label: "Team & Roles", href: "/team", icon: UsersRound, group: "management" },
-  { label: "Billing", href: "/billing", icon: CreditCard, group: "management" },
-  { label: "Settings", href: "/settings", icon: Settings, group: "management" },
-];
+const sectionIcons: Record<(typeof dashboardSections)[number]["href"], LucideIcon> = {
+  "/dashboard": LayoutDashboard,
+  "/ai-agents": Bot,
+  "/automations": Workflow,
+  "/tasks": CheckSquare,
+  "/knowledge": BookOpen,
+  "/customers": Users,
+  "/conversations": MessageSquare,
+  "/integrations": Plug,
+  "/analytics": BarChart3,
+  "/activity": Activity,
+  "/templates": Layers3,
+  "/team": UsersRound,
+  "/billing": CreditCard,
+  "/settings": Settings,
+};
+
+export const navItems = dashboardSections.map((section) => ({
+  ...section,
+  icon: sectionIcons[section.href],
+}));
 
 export function Sidebar({ workspace, user, workspaces, active = "Dashboard" }: {
   workspace: { id: string; name: string }; user: { id: string; name: string; email: string; role: string };

@@ -9,3 +9,4 @@ prisma/*.db
 
 .vercel
 *.tsbuildinfo
+/prompts/

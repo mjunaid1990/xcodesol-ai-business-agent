@@ -1,0 +1,16 @@
+export const dashboardSections = [
+  { label: "Dashboard", href: "/dashboard", group: "workspace" },
+  { label: "AI Agents", href: "/ai-agents", group: "workspace" },
+  { label: "Automations", href: "/automations", group: "workspace" },
+  { label: "Tasks", href: "/tasks", group: "workspace" },
+  { label: "Knowledge", href: "/knowledge", group: "workspace" },
+  { label: "Customers", href: "/customers", group: "workspace" },
+  { label: "Conversations", href: "/conversations", group: "workspace" },
+  { label: "Integrations", href: "/integrations", group: "workspace" },
+  { label: "Analytics", href: "/analytics", group: "workspace" },
+  { label: "Activity / Logs", href: "/activity", group: "workspace" },
+  { label: "Templates", href: "/templates", group: "workspace" },
+  { label: "Team & Roles", href: "/team", group: "management" },
+  { label: "Billing", href: "/billing", group: "management" },
+  { label: "Settings", href: "/settings", group: "management" },
+] as const;
