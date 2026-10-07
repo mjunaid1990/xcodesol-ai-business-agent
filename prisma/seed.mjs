@@ -1,8 +1,11 @@
 import prismaPackage from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const { PrismaClient } = prismaPackage;
 
 const prisma = new PrismaClient();
+const demoAdminEmail = process.env.DEMO_ADMIN_EMAIL ?? "admin@demo.orbitai.com";
+const demoAdminPassword = process.env.DEMO_ADMIN_PASSWORD ?? "OrbitAdmin123!";
 
 const permissions = [
   ["View agents", "agents.view"], ["Create agents", "agents.create"], ["Update agents", "agents.update"], ["Delete agents", "agents.delete"], ["Execute agents", "agents.execute"],
@@ -25,6 +28,10 @@ const byRole = {
 };
 
 try {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("The demo admin seed is disabled in production.");
+  }
+
   const records = await Promise.all(permissions.map(([name, slug]) => prisma.permission.upsert({ where: { slug }, update: { name }, create: { name, slug } })));
   const permissionBySlug = new Map(records.map((record) => [record.slug, record.id]));
   const roleByName = new Map();
@@ -40,7 +47,57 @@ try {
       .filter((assignment) => assignment.permissionId);
     await prisma.rolePermission.createMany({ data, skipDuplicates: true });
   }
-  console.log(`Seeded ${permissions.length} permissions and ${roleNames.length} roles.`);
+
+  const passwordHash = await hash(demoAdminPassword, 12);
+  const workspace = await prisma.workspace.upsert({
+    where: { slug: "orbit-demo-workspace" },
+    update: {
+      name: "Orbit Demo Workspace",
+      websiteUrl: "https://example.com",
+      industry: "Software",
+      companySize: "1-10",
+      timezone: "Asia/Karachi",
+      currency: "USD",
+      status: "active",
+      onboardingCompletedAt: new Date(),
+    },
+    create: {
+      name: "Orbit Demo Workspace",
+      slug: "orbit-demo-workspace",
+      websiteUrl: "https://example.com",
+      industry: "Software",
+      companySize: "1-10",
+      timezone: "Asia/Karachi",
+      currency: "USD",
+      status: "active",
+      onboardingCompletedAt: new Date(),
+    },
+  });
+  const user = await prisma.user.upsert({
+    where: { email: demoAdminEmail },
+    update: {
+      name: "Alex Morgan",
+      emailVerifiedAt: new Date(),
+      passwordHash,
+      timezone: "Asia/Karachi",
+      locale: "en",
+    },
+    create: {
+      name: "Alex Morgan",
+      email: demoAdminEmail,
+      emailVerifiedAt: new Date(),
+      passwordHash,
+      timezone: "Asia/Karachi",
+      locale: "en",
+    },
+  });
+  await prisma.workspaceUser.upsert({
+    where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
+    update: { role: "owner", status: "active", joinedAt: new Date() },
+    create: { workspaceId: workspace.id, userId: user.id, role: "owner", status: "active", joinedAt: new Date() },
+  });
+
+  console.log(`Seeded ${permissions.length} permissions, ${roleNames.length} roles, and demo admin ${demoAdminEmail}.`);
 } finally {
   await prisma.$disconnect();
 }
